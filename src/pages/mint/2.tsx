@@ -51,9 +51,6 @@ const Mint = () => {
 }
 
 //only works with valid account in Claims. (DUHH)
-let result = JSON.stringify(merkle.claims[address as keyof typeof address]);
-const parsed = JSON.parse(result) as MyObj;
-
 const estimatedClaimAmount = () => {
   let result = JSON.stringify(merkle.claims != undefined ? merkle.claims[address as keyof typeof address] : 'titsErrors');
   if (result) {

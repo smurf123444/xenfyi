@@ -44,8 +44,7 @@ const Mint = () => {
     proof: string[];
 }
 //only works with valid account in Claims. (DUHH)
-let result = JSON.stringify(merkle.claims[address as keyof typeof address]);
-const parsed = JSON.parse(result) as MyObj;
+
 
   const { data } = useContractRead({
     ...xenContract(chain),
@@ -89,17 +88,27 @@ const parsed = JSON.parse(result) as MyObj;
   const watchAllFields = watch(); 
   const { handleSubmit: cHandleSubmit } = useForm();
   /*** CONTRACT WRITE SETUP ***/
+  var parsed: MyObj = {
+    index: "0",
+    amount: "0",
+    proof: []
+  }
+if(merkle.claims[address as keyof typeof address] != undefined)
+{  
+  let result = JSON.stringify(merkle.claims[address as keyof typeof address]);
+  parsed = JSON.parse(result) as MyObj;
+ }
 
-  const { config: contractConfig, error } = usePrepareContractWrite({
-    ...xenContract(chain),
-    functionName: "claim",
-    args: [
-      parsed.index,
-      address,
-      parsed.amount,
-      parsed.proof
-    ],
-  }); 
+ const { config: contractConfig, error } = usePrepareContractWrite({
+   ...xenContract(chain),
+   functionName: "claim",
+   args: [
+     parsed.index,
+     address,
+     parsed.amount,
+     parsed.proof
+   ],
+ });
 /*   const { config: contractConfig, error } = usePrepareContractWrite({
     ...xenContract(chain),
     functionName: "claimMintReward",
