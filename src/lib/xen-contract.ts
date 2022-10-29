@@ -16,7 +16,7 @@ export const xenContract = (contractChain?: Chain) => {
     case chain.polygonMumbai.id:
     case bscTestnet.id:
       return {
-        addressOrName: "0xca41f293A32d25c2216bC4B30f5b0Ab61b6ed2CB",
+        addressOrName: "0x2b8f075c8b4c88276e8846052a9ec18c2f253f0b",
         contractInterface: XENCryptoABI,
         chainId: contractChain.id,
       };

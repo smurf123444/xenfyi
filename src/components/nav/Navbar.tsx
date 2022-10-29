@@ -74,13 +74,10 @@ export const Navbar: NextPage = () => {
   };
 
   useEffect(() => {
-    if (userMint && !userMint.term.isZero()) {
-      if (userMint.maturityTs.toNumber() > UTC_TIME) {
-        setMintPageOverride(2);
-      } else {
-        setMintPageOverride(3);
+    if (userMint && userMint.claimed) {
+       setMintPageOverride(2);
       }
-    } else {
+    else {
       setMintPageOverride(1);
     }
     if (userStake && !userStake.term.isZero()) {

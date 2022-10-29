@@ -15,11 +15,8 @@ import { xenContract } from "~/lib/xen-contract";
 
 export interface UserMint {
   user: string;
-  amplifier: BigNumber;
-  eaaRate: BigNumber;
-  maturityTs: BigNumber;
-  rank: BigNumber;
-  term: BigNumber;
+  claimed: string;
+  amount: number;
 }
 
 export interface UserStake {
@@ -143,25 +140,6 @@ export const XENProvider = ({ children }: any) => {
 
   useContractRead({
     ...xenContract(chain),
-    functionName: "getUserMint",
-    overrides: { from: address },
-    onSuccess(data) {
-      setUserMint({
-        user: data.user,
-        amplifier: data.amplifier,
-        eaaRate: data.eaaRate,
-        maturityTs: data.maturityTs,
-        rank: data.rank,
-        term: data.term,
-      });
-    },
-    enabled: address != null,
-    cacheOnBlock: true,
-    // watch: true,
-  });
-
-  useContractRead({
-    ...xenContract(chain),
     functionName: "getUserStake",
     overrides: { from: address },
     onSuccess(data) {
@@ -179,10 +157,6 @@ export const XENProvider = ({ children }: any) => {
 
   useContractReads({
     contracts: [
-      {
-        ...xenContract(chain),
-        functionName: "globalRank",
-      },
       {
         ...xenContract(chain),
         functionName: "activeMinters",
@@ -205,43 +179,16 @@ export const XENProvider = ({ children }: any) => {
       },
       {
         ...xenContract(chain),
-        functionName: "getCurrentMaxTerm",
-      },
-      {
-        ...xenContract(chain),
-        functionName: "getCurrentAMP",
-      },
-      {
-        ...xenContract(chain),
-        functionName: "getCurrentEAAR",
-      },
-      {
-        ...xenContract(chain),
         functionName: "getCurrentAPY",
-      },
-      {
-        ...xenContract(chain),
-        functionName: "getGrossReward",
-        args: [
-          Number(globalRank) - (userMint?.rank.toNumber() ?? 0),
-          Number(userMint?.amplifier ?? 0),
-          Number(userMint?.term ?? 0),
-          1000 + Number(userMint?.eaaRate ?? 0),
-        ],
       },
     ],
     onSuccess(data) {
-      setGlobalRank(Number(data[0]));
-      setActiveMinters(Number(data[1]));
-      setActiveStakes(Number(data[2]));
-      setTotalXenStaked(Number(data[3]));
-      setTotalSupply(Number(data[4]));
-      setGenesisTs(Number(data[5]));
-      setCurrentMaxTerm(Number(data[6] ?? 100 * 86400));
-      setCurrentAMP(Number(data[7]));
-      setCurrentEAAR(Number(data[8]));
-      setCurrentAPY(Number(data[9]));
-      setGrossReward(Number(data[10]));
+      setActiveMinters(Number(data[0]));
+      setActiveStakes(Number(data[1]));
+      setTotalXenStaked(Number(data[2]));
+      setTotalSupply(Number(data[3]));
+      setGenesisTs(Number(data[4]));
+      setCurrentAPY(Number(data[5]));
     },
     cacheOnBlock: true,
     watch: true,

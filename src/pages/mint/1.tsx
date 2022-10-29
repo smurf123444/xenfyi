@@ -1,7 +1,10 @@
 import {
+  useFeeData,
   useNetwork,
   useAccount,
+  useContractRead,
   useContractWrite,
+  useContractReads,
   useWaitForTransaction,
   usePrepareContractWrite,
 } from "wagmi";
@@ -23,63 +26,92 @@ import * as yup from "yup";
 import GasEstimate from "~/components/GasEstimate";
 import CardContainer from "~/components/containers/CardContainer";
 import XENContext from "~/contexts/XENContext";
-import XENCryptoABI from "~/abi/XENCryptoABI";
-
+import { merkle } from "~/lib/merkle";
 const Mint = () => {
   const { address } = useAccount();
   const { chain } = useNetwork();
   const router = useRouter();
+  const { userMint, feeData } = useContext(XENContext);
   const [disabled, setDisabled] = useState(true);
-  const [maxFreeMint, setMaxFreeMint] = useState(100);
-  const [processing, setProcessing] = useState(false);
-  const [maturity, setMaturity] = useState<number>(UTC_TIME);
 
-  const { userMint, currentMaxTerm, globalRank, feeData } =
-    useContext(XENContext);
+  const [processing, setProcessing] = useState(false);
+
+
+  /*** CONTRACT READ SETUP  ***/
+  interface MyObj {
+    index: string;
+    amount: string;
+    proof: string[];
+}
+//only works with valid account in Claims. (DUHH)
+let result = JSON.stringify(merkle.claims[address as keyof typeof address]);
+const parsed = JSON.parse(result) as MyObj;
+
+  const { data } = useContractRead({
+    ...xenContract(chain),
+    functionName: "getUserMint",
+    overrides: { from: address },
+    watch: true,
+  });
+
+/*   const { data: contractReads } = useContractReads({
+    contracts: [
+      {
+        ...xenContract(chain),
+        functionName: "getCurrentMaxTerm",
+      },
+      {
+        ...xenContract(chain),
+        functionName: "globalRank",
+      },
+    ],
+    watch: true,
+  }); */
+
   /*** FORM SETUP ***/
 
-  const schema = yup
+ const schema = yup
     .object()
     .shape({
-      startMintDays: yup
-        .number()
-        .required("Days required")
-        .max(maxFreeMint, `Maximum claim days: ${maxFreeMint}`)
-        .positive("Days must be greater than 0")
-        .typeError("Days required"),
     })
-    .required();
+
+
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
     setValue,
   } = useForm({
-    mode: "onChange",
     resolver: yupResolver(schema),
   });
-  const watchAllFields = watch();
-
+  const watchAllFields = watch(); 
+  const { handleSubmit: cHandleSubmit } = useForm();
   /*** CONTRACT WRITE SETUP ***/
 
-  const { config, error } = usePrepareContractWrite({
-    addressOrName: xenContract(chain).addressOrName,
-    contractInterface: XENCryptoABI,
-    functionName: "claimRank",
-    args: [watchAllFields.startMintDays ?? 0],
-    enabled: isValid,
-  });
-  const { data: claimRankData, write } = useContractWrite({
-    ...config,
+  const { config: contractConfig, error } = usePrepareContractWrite({
+    ...xenContract(chain),
+    functionName: "claim",
+    args: [
+      parsed.index,
+      address,
+      parsed.amount,
+      parsed.proof
+    ],
+  }); 
+/*   const { config: contractConfig, error } = usePrepareContractWrite({
+    ...xenContract(chain),
+    functionName: "claimMintReward",
+  }); */
+  const { write } = useContractWrite({
+    ...contractConfig,
     onSuccess(data) {
-      setProcessing(true);
-      setDisabled(true);
+    //  setProcessing(true);
+   //   setDisabled(true);
     },
   });
   const {} = useWaitForTransaction({
-    hash: claimRankData?.hash,
     onSuccess(data) {
       toast("Claim successful");
       router.push("/mint/2");
@@ -88,92 +120,69 @@ const Mint = () => {
   const onSubmit = () => {
     write?.();
   };
+/* 
+  const { handleSubmit: cHandleSubmitReward } = useForm();
 
+  const { config: configClaim } = usePrepareContractWrite({
+ ...xenContract(chain),
+    functionName: "claimMintReward"
+  });
+  const { data: claimData, write: writeClaim } = useContractWrite({
+    ...configClaim,
+    onSuccess(data) {
+      setProcessing(true);
+      setDisabled(true);
+    },
+  });
+  const handleClaimSubmitReward = () => {
+    writeClaim?.();
+  };
+  const {} = useWaitForTransaction({
+    hash: claimData?.hash,
+    onSuccess(data) {
+      toast("Claim mint successful");
+
+      router.push("/stake/1");
+    },
+  }); */
   /*** USE EFFECT ****/
-
+//console.log(data);
   useEffect(() => {
-    if (watchAllFields.startMintDays) {
+/*     if (watchAllFields.startMintDays) {
       setMaturity(UTC_TIME + watchAllFields.startMintDays * 86400);
-    }
-
-    if (!processing && address && userMint?.term.isZero()) {
+    } */
+    if (!processing && address && data?.[1] == false) {
       setDisabled(false);
     }
 
-    setMaxFreeMint(Number(currentMaxTerm ?? 8640000) / 86400);
+    //setMaxFreeMint(Number(contractReads?.[0] ?? 8640000) / 86400);
   }, [
     address,
-    config,
-    currentMaxTerm,
-    isValid,
+    contractConfig?.request?.gasLimit,
+    data,
+    feeData?.gasPrice,
     processing,
-    userMint?.term,
-    watchAllFields.startMintDays,
   ]);
 
   return (
     <Container className="max-w-2xl">
       <div className="flew flex-row space-y-8 ">
         <ul className="steps w-full">
-          <Link href="/mint/1">
+        <Link href="/mint/1">
             <a className="step step-neutral">Start Mint</a>
           </Link>
 
-          <Link href="/mint/2">
-            <a className="step">Minting</a>
-          </Link>
 
-          <Link href="/mint/3">
-            <a className="step">Mint</a>
+          <Link href="/mint/2">
+            <a className="step step-neutral">Mint</a>
           </Link>
         </ul>
 
         <CardContainer>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={cHandleSubmit(onSubmit)}>
+
             <div className="flex flex-col space-y-4">
-              <h2 className="card-title text-neutral">Claim Rank</h2>
-              <MaxValueField
-                title="DAYS"
-                description="Number of days"
-                decimals={0}
-                value={maxFreeMint}
-                disabled={disabled}
-                errorMessage={
-                  <ErrorMessage errors={errors} name="startMintDays" />
-                }
-                register={register("startMintDays")}
-                setValue={setValue}
-              />
-
-              <div className="flex stats glass w-full text-neutral">
-                <NumberStatCard
-                  title="Your Claim Rank"
-                  value={globalRank}
-                  decimals={0}
-                />
-                <DateStatCard
-                  title="Maturity"
-                  dateTs={maturity}
-                  isPast={false}
-                />
-              </div>
-
-              <div className="alert shadow-lg glass">
-                <div>
-                  <div>
-                    <InformationCircleIcon className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold">Minting Terms</h3>
-                    <div className="text-xs">
-                      Your mint starts by claiming a rank. Select the number of
-                      days you want to mint for. The longer you mint for, the
-                      more rewards you will receive. You can mint for a maximum
-                      of {maxFreeMint} days.
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <h2 className="card-title text-neutral">Claim Free Tokens</h2>
 
               <div className="form-control w-full">
                 <button
@@ -181,19 +190,45 @@ const Mint = () => {
                   className={clsx("btn glass text-neutral", {
                     loading: processing,
                   })}
+                  //onClick={() => write?.()}
                   disabled={disabled}
                 >
                   Start Mint
                 </button>
               </div>
-
               <GasEstimate
-                feeData={feeData}
-                gasLimit={config?.request?.gasLimit}
-              />
+                  feeData={feeData}
+                  gasLimit={contractConfig?.request?.gasLimit}
+                />
             </div>
           </form>
         </CardContainer>
+
+{/*         <CardContainer>
+          <form >
+
+            <div className="flex flex-col space-y-4">
+              <h2 className="card-title text-neutral">Claim Free Tokens</h2>
+
+              <div className="form-control w-full">
+                <button
+                  type="submit"
+                  className={clsx("btn glass text-neutral", {
+                    loading: processing,
+                  })}
+                  //onClick={() => write?.()}
+                  disabled={disabled}
+                >
+                  Claim Mint
+                </button>
+              </div>
+              <GasEstimate
+                  feeData={feeData}
+                  gasLimit={contractConfig?.request?.gasLimit}
+                />
+            </div>
+          </form>
+        </CardContainer> */}
       </div>
     </Container>
   );
