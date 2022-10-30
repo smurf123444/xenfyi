@@ -33,7 +33,6 @@ const Mint = () => {
   const router = useRouter();
   const { userMint, feeData } = useContext(XENContext);
   const [disabled, setDisabled] = useState(true);
-
   const [processing, setProcessing] = useState(false);
 
 
@@ -44,8 +43,6 @@ const Mint = () => {
     proof: string[];
 }
 //only works with valid account in Claims. (DUHH)
-
-
   const { data } = useContractRead({
     ...xenContract(chain),
     functionName: "getUserMint",
@@ -53,29 +50,12 @@ const Mint = () => {
     watch: true,
   });
 
-/*   const { data: contractReads } = useContractReads({
-    contracts: [
-      {
-        ...xenContract(chain),
-        functionName: "getCurrentMaxTerm",
-      },
-      {
-        ...xenContract(chain),
-        functionName: "globalRank",
-      },
-    ],
-    watch: true,
-  }); */
-
   /*** FORM SETUP ***/
 
  const schema = yup
     .object()
     .shape({
     })
-
-
-
   const {
     register,
     handleSubmit,
@@ -109,10 +89,6 @@ if(merkle.claims[address as keyof typeof address] != undefined)
      parsed.proof
    ],
  });
-/*   const { config: contractConfig, error } = usePrepareContractWrite({
-    ...xenContract(chain),
-    functionName: "claimMintReward",
-  }); */
   const { write } = useContractWrite({
     ...contractConfig,
     onSuccess(data) {
@@ -129,42 +105,14 @@ if(merkle.claims[address as keyof typeof address] != undefined)
   const onSubmit = () => {
     write?.();
   };
-/* 
-  const { handleSubmit: cHandleSubmitReward } = useForm();
 
-  const { config: configClaim } = usePrepareContractWrite({
- ...xenContract(chain),
-    functionName: "claimMintReward"
-  });
-  const { data: claimData, write: writeClaim } = useContractWrite({
-    ...configClaim,
-    onSuccess(data) {
-      setProcessing(true);
-      setDisabled(true);
-    },
-  });
-  const handleClaimSubmitReward = () => {
-    writeClaim?.();
-  };
-  const {} = useWaitForTransaction({
-    hash: claimData?.hash,
-    onSuccess(data) {
-      toast("Claim mint successful");
 
-      router.push("/stake/1");
-    },
-  }); */
   /*** USE EFFECT ****/
-//console.log(data);
   useEffect(() => {
-/*     if (watchAllFields.startMintDays) {
-      setMaturity(UTC_TIME + watchAllFields.startMintDays * 86400);
-    } */
+
     if (!processing && address && data?.[1] == false) {
       setDisabled(false);
     }
-
-    //setMaxFreeMint(Number(contractReads?.[0] ?? 8640000) / 86400);
   }, [
     address,
     contractConfig?.request?.gasLimit,
@@ -212,32 +160,6 @@ if(merkle.claims[address as keyof typeof address] != undefined)
             </div>
           </form>
         </CardContainer>
-
-{/*         <CardContainer>
-          <form >
-
-            <div className="flex flex-col space-y-4">
-              <h2 className="card-title text-neutral">Claim Free Tokens</h2>
-
-              <div className="form-control w-full">
-                <button
-                  type="submit"
-                  className={clsx("btn glass text-neutral", {
-                    loading: processing,
-                  })}
-                  //onClick={() => write?.()}
-                  disabled={disabled}
-                >
-                  Claim Mint
-                </button>
-              </div>
-              <GasEstimate
-                  feeData={feeData}
-                  gasLimit={contractConfig?.request?.gasLimit}
-                />
-            </div>
-          </form>
-        </CardContainer> */}
       </div>
     </Container>
   );
