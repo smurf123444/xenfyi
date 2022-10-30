@@ -221,7 +221,6 @@ const { data } = useContractRead({
   /*** USE EFFECT ****/
 
   useEffect(() => {
-    console.log(data)
     if (
       address 
     ) {
