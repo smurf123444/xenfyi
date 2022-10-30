@@ -247,10 +247,10 @@ const { data } = useContractRead({
     processing,
     userMint,
     userStake,
-/*     cShareIsValid,
+    cShareIsValid,
     cStakeIsValid,
     configClaimShare,
-    configClaimStake, */
+    configClaimStake, 
   ]);
 
   return (
