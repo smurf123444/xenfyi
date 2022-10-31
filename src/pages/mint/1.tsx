@@ -79,7 +79,8 @@ if(merkle.claims[address as keyof typeof address] != undefined)
   parsed = JSON.parse(result) as MyObj;
  }
 
- const { config: contractConfig, error } = usePrepareContractWrite({
+ const { config: contractConfig, error: prepareError, isError: isPrepareError} = usePrepareContractWrite({
+  
    ...xenContract(chain),
    functionName: "claim",
    args: [
@@ -88,12 +89,30 @@ if(merkle.claims[address as keyof typeof address] != undefined)
      parsed.amount,
      parsed.proof
    ],
+   onSuccess(data) {
+    setProcessing(false);
+    setDisabled(false);
+    toast("Drop Ready");
+    console.log("Drop Ready")
+  },
+  onError(data) {
+    setProcessing(true);
+    setDisabled(true);
+    toast.error("Drop Not Available. (either Already Claimed, or Not Invited)");
+    console.log("Drop Not Available")
+  },
  });
   const { write } = useContractWrite({
     ...contractConfig,
     onSuccess(data) {
-    //  setProcessing(true);
-   //   setDisabled(true);
+      setProcessing(false);
+      setDisabled(false);
+      router.push("/mint/2");
+    },
+    onError(data) {
+      setProcessing(true);
+      setDisabled(true);
+
     },
   });
   const {} = useWaitForTransaction({
@@ -110,9 +129,9 @@ if(merkle.claims[address as keyof typeof address] != undefined)
   /*** USE EFFECT ****/
   useEffect(() => {
 
-    if (!processing && address && data?.[1] == false) {
+/*     if (!processing && address && data?.[1] == false) {
       setDisabled(false);
-    }
+    } */
   }, [
     address,
     contractConfig?.request?.gasLimit,

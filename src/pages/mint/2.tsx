@@ -75,7 +75,21 @@ const { data } = useContractRead({
   const { config: configClaim } = usePrepareContractWrite({
     addressOrName: xenContract(chain).addressOrName,
     contractInterface: XENCryptoABI,
-    functionName: "claimMintReward"
+    functionName: "claimMintReward",
+    onSuccess(data) {
+      setProcessing(false);
+      setDisabled(false);
+      toast("Drop Ready");
+      console.log("Drop Ready")
+      setReward(Number(Web3.utils.fromWei(estimatedClaimAmount().toString(), 'ether'))) ;
+    },
+    onError(data) {
+      setProcessing(true);
+      setDisabled(true);
+      toast.error("Mint Not Available. (either Havent Claimed (go back to Start Mint),\n or you already Minted (Hooray!))");
+      console.log("Drop Not Available")
+      setReward(Number(Web3.utils.fromWei("0", 'ether'))) ;
+    },
   });
   const { data: claimData, write: writeClaim } = useContractWrite({
     ...configClaim,
@@ -217,26 +231,20 @@ const { data } = useContractRead({
       router.push("/stake/2");
     },
   });
+let i = 0;
 
   /*** USE EFFECT ****/
-
   useEffect(() => {
-    console.log(data)
     if (
       address 
+      && data
     ) {
       if (!processing && data?.[1]==true) {
         setDisabled(false);
       }
     }
-    const penalty = 1666585599 / (Date.now() / 1000);
-    const reward = Number(Web3.utils.fromWei(estimatedClaimAmount().toString(), 'ether'));
-    setPenaltyPercent(penalty);
-    setReward(reward);
-    setPenaltyXEN(reward * (penalty / 100));
-    if (userMint) {
 
-    }
+
 
     if (address && userStake && userStake.term.toNumber() == 0) {
       setActiveStakeDisabled(false);
@@ -277,13 +285,6 @@ const { data } = useContractRead({
                     title="Reward"
                     value={reward}
                     description="XEN"
-                  />
-                  <CountDataCard
-                    title="Penalty"
-                    value={penaltyPercent}
-                    suffix="%"
-                    descriptionNumber={penaltyXEN}
-                    descriptionNumberSuffix=" XEN"
                   />
                 </div>
 

@@ -7,7 +7,7 @@ const Meta: NextPage = () => {
   const { asPath } = router;
   const path = asPath.split("/").filter((item) => item !== "");
 
-  const title = `XEN.fyi - ${path.join(" - ")}`;
+  const title = `Trance Token - ${path.join(" - ")}`;
   const description =
     "XEN.fyi is an open-source project to help users understand the XEN crypto protocol and its ecosystem.";
   const url = "https://xen.fyi";

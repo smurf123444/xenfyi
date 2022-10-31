@@ -12,10 +12,11 @@ import {
 import { BigNumber } from "ethers";
 import { chainList } from "~/lib/client";
 import { xenContract } from "~/lib/xen-contract";
+import { merkle } from "~/lib/merkle";
 
 export interface UserMint {
   user: string;
-  claimed: string;
+  claimed: boolean;
   amount: number;
 }
 
@@ -60,6 +61,33 @@ export interface Balance {
   value: BigNumber;
 }
 
+export interface Claim {
+  index: number;
+  amount: string;
+  proof: string[];
+}
+
+/*  let globalClaim: Claim = {
+  index: '0',
+  amount: 0,
+  proof: []
+}; */
+/*
+const GetClaim = () => {
+  const { address } = useAccount();
+  let result = JSON.stringify(merkle.claims != undefined ? merkle.claims[address as keyof typeof address] : 'titsErrors');
+  if (result) {
+      const parsed = JSON.parse(result) as Claim;
+      globalClaim = parsed;
+    return parsed;
+  } else {
+    const XEN = undefined
+    return XEN;
+  }
+}
+
+GetClaim(); */
+
 interface IXENContext {
   setChainOverride: (chain: Chain) => void;
   userMint?: UserMint;
@@ -78,6 +106,7 @@ interface IXENContext {
   currentAPY: number;
   grossReward: number;
   token?: Token;
+  merkle?: Claim;  
 }
 
 const XENContext = createContext<IXENContext>({
@@ -98,6 +127,7 @@ const XENContext = createContext<IXENContext>({
   currentAPY: 0,
   grossReward: 0,
   token: undefined,
+  merkle: undefined,  
 });
 
 export const XENProvider = ({ children }: any) => {
@@ -118,11 +148,11 @@ export const XENProvider = ({ children }: any) => {
   const [currentAPY, setCurrentAPY] = useState(0);
   const [grossReward, setGrossReward] = useState(0);
   const [token, setToken] = useState<Token | undefined>();
-
   const { address } = useAccount();
-  const { chain: networkChain } = useNetwork();
 
+  const { chain: networkChain } = useNetwork();
   const chain = chainOverride ?? networkChain ?? chainList[0];
+
 
   useBalance({
     addressOrName: address,
@@ -148,6 +178,22 @@ export const XENProvider = ({ children }: any) => {
         apy: data.apy,
         maturityTs: data.maturityTs,
         term: data.term,
+      });
+    },
+    enabled: address != null,
+    cacheOnBlock: true,
+    // watch: true,
+  });
+
+  useContractRead({
+    ...xenContract(chain),
+    functionName: "getUserMint",
+    overrides: { from: address },
+    onSuccess(data) {
+      setUserMint({
+        user: data.user,
+        claimed: data.claimed,
+        amount: data.amount
       });
     },
     enabled: address != null,
@@ -249,6 +295,7 @@ export const XENProvider = ({ children }: any) => {
         currentAPY,
         grossReward,
         token,
+/*         merkle, */
       }}
     >
       {children}

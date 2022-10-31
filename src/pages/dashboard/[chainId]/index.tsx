@@ -29,17 +29,12 @@ const Dashboard: NextPage = () => {
     totalSupply,
     currentMaxTerm,
     genesisTs,
-    currentAMP,
-    currentEAAR,
     currentAPY,
     token,
   } = useContext(XENContext);
 
   const generalStats = [
-    {
-      title: "Global Rank",
-      value: globalRank,
-    },
+
     {
       title: "Active Minters",
       value: activeMinters,
@@ -48,11 +43,7 @@ const Dashboard: NextPage = () => {
       title: "Active Stakes",
       value: activeStakes,
     },
-    {
-      title: "Max Mint Term",
-      value: currentMaxTerm / 86400,
-      suffix: " Days",
-    },
+
   ];
 
   const stakeItems = [
@@ -71,21 +62,7 @@ const Dashboard: NextPage = () => {
   ];
 
   const rewardsItems = [
-    {
-      title: "AMP",
-      value: currentAMP,
-      decimals: 0,
-      tooltip:
-        "Reward Amplifier (AMP) is a time-dependent part of XEN Mint Reward calculation. It starts at 3,000 at Genesis and decreases by 1 every day until it reaches 1",
-    },
-    {
-      title: "EAA",
-      value: currentEAAR / 10.0,
-      decimals: 2,
-      suffix: "%",
-      tooltip:
-        "Early Adopter Amplifier (EAA) is a part of XEN Mint Reward calculation which depends on current Global Rank. EAA starts from 10% and decreases in a linear fashion by 0.1% per each 100,000 increase in Global Rank.",
-    },
+
     {
       title: "APY",
       value: currentAPY,
@@ -155,7 +132,6 @@ const Dashboard: NextPage = () => {
                   title={item.title}
                   value={item.value}
                   decimals={0}
-                  suffix={item.suffix}
                 />
               ))}
             </div>

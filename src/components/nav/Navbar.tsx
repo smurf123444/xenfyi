@@ -119,7 +119,7 @@ export const Navbar: NextPage = () => {
   return (
     <div className="navbar">
       <div className="navbar-start space-x-2">
-        <a className="text-neutral normal-case text-3xl font-light">XEN</a>
+        <a className="text-neutral normal-case text-3xl font-light">TRANCE TOKEN</a>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal glass rounded-box p-2 space-x-4">

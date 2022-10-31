@@ -17,8 +17,8 @@ export const BottomNav: NextPage = () => {
   const { userMint, userStake } = useContext(XENContext);
 
   useEffect(() => {
-    if (userMint && !userMint.claimed) {
-      setMintPageOverride(3);
+    if (userMint && userMint.claimed) {
+      setMintPageOverride(2);
     }
     else {
       setMintPageOverride(1);
